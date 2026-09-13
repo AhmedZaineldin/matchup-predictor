@@ -51,6 +51,28 @@ each one.
 
 ## Quick start
 
+**1. Get the data.** It lives on Kaggle rather than in this repo — the raw CSVs come to ~44 MB with a single
+24 MB file in there, which is better kept out of git:
+
+### ➜ [**MatchupFeatures on Kaggle**](https://www.kaggle.com/datasets/ahmedzaineldin01/matchupfeatures)
+
+Download and unpack it so the folders sit like this:
+
+```
+Data/
+├── UFC/           ufc_fight_results.csv, ufc_fight_stats.csv, ufc_fight_details.csv,
+│                  ufc_event_details.csv, ufc_fighter_details.csv, ufc_fighter_tott.csv
+└── Basketball/    schedule.csv, team_box.csv
+```
+
+Or pull it from the command line, if you have the Kaggle CLI configured:
+
+```bash
+kaggle datasets download -d ahmedzaineldin01/matchupfeatures -p Data --unzip
+```
+
+**2. Install and run.**
+
 ```bash
 python -m venv venv
 source venv/bin/activate          # Windows: venv\Scripts\activate
@@ -60,13 +82,11 @@ python TabularMLPipeline.py --config config.yaml      # classical sweep
 python DeepLearningPipeline.py --config config_dl.yaml  # neural + pretrained
 ```
 
-Then curate your keepers into `best_models/<Dataset>/` and launch the app:
+**3. Curate your keepers** into `best_models/<Dataset>/` and launch the app:
 
 ```bash
 cd PredictorApp && python app.py     # http://localhost:5000
 ```
-
-The data is already in `Data/` — nothing to download.
 
 ---
 
@@ -86,6 +106,11 @@ features** — career and last-5 form for striking, takedowns, control time and 
 finishing tendency; layoff and activity rate; stance matchups; and a fighter-1-minus-fighter-2
 difference for every one of them. Every stat is computed *entering* the fight, never including
 it.
+
+Feature engineering happens at load time in `UFCFeatures.py` and `BasketballFeatures.py`, so the
+[Kaggle dataset](https://www.kaggle.com/datasets/ahmedzaineldin01/matchupfeatures) ships the raw
+source CSVs and the pipeline rebuilds the feature matrix from them. Nothing is precomputed —
+change a feature definition and the next run picks it up.
 
 ---
 
@@ -152,7 +177,7 @@ matchup-predictor/
 ├── UFCFeatures.py             UFC feature engineering + live fighter snapshot
 ├── BasketballFeatures.py      Basketball feature engineering + live team snapshot
 ├── PredictorApp/              Flask app, feature builder, model loader, explainer
-├── Data/                      Raw UFC + basketball CSVs
+├── Data/                      Raw UFC + basketball CSVs — download from Kaggle (gitignored)
 ├── best_models/               Your curated picks, one folder per dataset
 ├── config.yaml                Classical grid
 └── config_dl.yaml             Deep learning grid
