@@ -1,0 +1,34 @@
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+xgboost>=2.0
+lightgbm>=4.0
+optuna>=3.0
+imbalanced-learn>=0.11
+matplotlib>=3.7
+seaborn>=0.12
+joblib>=1.3
+PyYAML>=6.0
+
+# --- Only needed for PredictorApp/ (the local matchup-predictor website) ---
+Flask>=3.0
+
+# --- Only needed for DeepLearningPipeline.py (not TabularMLPipeline.py) ---
+torch>=2.2
+tqdm>=4.65
+
+# Optional optimizers for DeepLearningPipeline.py's OptimizerName list (Lion, Prodigy,
+# ScheduleFreeAdamW). If you skip these, those three options just fall back to AdamW
+# automatically (with a printed warning) - Adam/AdamW/SGD/RMSprop/RAdam/Sophia all work
+# with no extra installs, since RAdam and Sophia are built into torch/this codebase.
+lion-pytorch>=0.2
+prodigyopt>=1.0
+schedulefree>=1.0
+
+# Pretrained tabular foundation models for DeepLearningPipeline.py's Architecture list
+# (TabPFN, TabICL). Both work on CPU for these dataset sizes - see README.md for one-time
+# setup (TabPFN's checkpoint is gated on Hugging Face and needs a license acceptance + token).
+# SAP-RPT-1-OSS is NOT listed here on purpose: it requires Python 3.11 specifically and a
+# CUDA GPU (ideally 80GB+ VRAM) - see README.md if you want to try it in its own environment.
+tabpfn>=8.0
+tabicl>=0.1

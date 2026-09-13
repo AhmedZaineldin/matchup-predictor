@@ -1,0 +1,113 @@
+# =============================================================================
+# DATASETS - only your own data. All 6 use the CSVs already sitting in
+# Data/UFC/ and Data/Basketball/ (see README.md for what each one predicts).
+# Comment an entry out (or delete it) to skip it; add more entries the same
+# way if you ever want to run against a different CSV.
+# =============================================================================
+Datasets:
+  - Name: UfcRound
+    Builtin: UfcRound
+  - Name: UfcMethod
+    Builtin: UfcMethod
+  - Name: NbaWin
+    Builtin: NbaWin
+  - Name: WnbaWin
+    Builtin: WnbaWin
+  - Name: NcaaMbbWin
+    Builtin: NcaaMbbWin
+  - Name: NcaaWbbWin
+    Builtin: NcaaWbbWin
+
+  # --- To point this at a CSV of your own later, add an entry like this instead: ---
+  # - Name: MyOtherDataset
+  #   CsvPath: "Data/MyOtherDataset.csv"
+  #   TargetColumn: "Label"
+  #   DropFirstColumn: false
+  #   DropColumns: ["Notes", "Timestamp"]
+  #   CategoricalColumns: ["Region", "DeviceType"]
+
+# =============================================================================
+# GRID - every combination of Models x Scalers x ImbalanceMethod x OutlierMethod
+# is run and gets its own Exp-{Dataset}-{Model}-{Scaler}-{Imbalance}-{Outlier}/
+# folder. Comment items out of these lists to control how big the grid gets.
+# =============================================================================
+
+# Models: pick any of: RandomForest, ExtraTrees, GradientBoosting, AdaBoost,
+# DecisionTree, KNN, LogisticRegression, SVC, GaussianNB, SGD, MLP, Bagging,
+# XGBoost, LightGBM
+Models:
+  - RandomForest
+  - XGBoost
+  # - LightGBM
+  # - ExtraTrees
+  # - GradientBoosting
+  # - AdaBoost
+  # - DecisionTree
+  # - KNN
+  # - LogisticRegression
+  # - SVC
+  # - GaussianNB
+  # - SGD
+  # - MLP
+  # - Bagging
+
+# Scalers: pick any of: Standard, MinMax, Robust, MaxAbs, Normalizer, QuantileTransformer
+Scalers:
+  - Standard
+  # - MinMax
+  # - Robust
+  # - MaxAbs
+  # - Normalizer
+  # - QuantileTransformer
+
+# ImbalanceMethod: pick any of: SMOTE, ADASYN, BorderlineSMOTE, RandomOverSampler,
+# RandomUnderSampler, SMOTETomek, ClassWeight, None
+ImbalanceMethod:
+  - SMOTE
+  # - ADASYN
+  # - BorderlineSMOTE
+  # - RandomOverSampler
+  # - RandomUnderSampler
+  # - SMOTETomek
+  # - ClassWeight
+  # - None
+
+# OutlierMethod: pick any of: IQR, ZScore, IsolationForest, LocalOutlierFactor,
+# EllipticEnvelope, None
+OutlierMethod:
+  - IQR
+  # - ZScore
+  # - IsolationForest
+  # - LocalOutlierFactor
+  # - EllipticEnvelope
+  # - None
+
+# =============================================================================
+# EVERYTHING ELSE
+# =============================================================================
+OutputDir: Results
+
+# Number of Optuna trials per experiment (higher = slower but better tuned).
+NOptunaTrials: 25
+
+# Train/val/test split fractions (must leave 1 - TestSize - ValSize for training).
+TestSize: 0.10
+ValSize: 0.10
+
+# Random seed used everywhere (split, resampling, model init, Optuna sampler).
+RandomState: 42
+
+# Step 2 (RemoveOutliers) parameters:
+OutlierIqrMultiplier: 3.0        # used by the IQR method
+OutlierZScoreThreshold: 3.0      # used by the ZScore method
+OutlierContamination: 0.05       # expected outlier fraction, used by IsolationForest/LocalOutlierFactor/EllipticEnvelope
+OutlierMaxRowDropFrac: 0.15      # safety cap: never remove more than this fraction of rows
+
+# Step 4 (DropRedundantColumns): absolute correlation above this is considered redundant.
+CorrelationThreshold: 0.95
+
+# Step 7 (SelectFeatures): each of the 3 methods (mutual information, ANOVA F-stat,
+# Random Forest importance) keeps its own top fraction of features; a feature
+# survives only if at least 2 of the 3 methods kept it.
+FeatureSelectionTopKFrac: 0.6
+MinFeaturesSelected: 4

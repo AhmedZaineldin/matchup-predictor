@@ -1,0 +1,209 @@
+# =============================================================================
+# DATASETS - identical format to config.yaml (same 6 datasets, same Data/ folder).
+# The deep-learning pipeline reuses UFCFeatures.py / BasketballFeatures.py directly,
+# so a dataset that works in config.yaml works here unchanged.
+# =============================================================================
+Datasets:
+  - Name: UfcRound
+    Builtin: UfcRound
+  - Name: UfcMethod
+    Builtin: UfcMethod
+  - Name: NbaWin
+    Builtin: NbaWin
+  - Name: WnbaWin
+    Builtin: WnbaWin
+  - Name: NcaaMbbWin
+    Builtin: NcaaMbbWin
+  - Name: NcaaWbbWin
+    Builtin: NcaaWbbWin
+
+  # --- To point this at a CSV of your own later, add an entry like this instead: ---
+  # - Name: MyOtherDataset
+  #   CsvPath: "Data/MyOtherDataset.csv"
+  #   TargetColumn: "Label"
+  #   DropFirstColumn: false
+  #   DropColumns: ["Notes", "Timestamp"]
+  #   CategoricalColumns: ["Region", "DeviceType"]
+
+# =============================================================================
+# GRID - every combination of Architecture x OptimizerName x LossFunction x Scalers
+# x ImbalanceMethod x OutlierMethod is run and gets its own
+# Exp-{Dataset}-{Architecture}-{Optimizer}-{Loss}-{Scaler}-{Imbalance}-{Outlier}/
+# folder. Comment items out of these lists to control how big (and how slow) the
+# grid gets - neural nets are much slower to train than the classical models in
+# config.yaml, so this starts smaller by default.
+# =============================================================================
+
+# Architecture: pick any of: MLP, TabTransformer (trained from scratch on your data), or
+# TabPFN, TabICL, SapRpt1Oss (pretrained foundation models - inference only, no training loop,
+# ignore all the Optimizer/Loss/Scheduler/NumEpochs/Patience settings below for these three -
+# see README.md's "Pretrained models" section for one-time setup, e.g. TabPFN's gated
+# Hugging Face checkpoint). Mixing a pretrained architecture into the same run as
+# OptimizerName/LossFunction lists with more than one entry just re-runs that pretrained model
+# redundantly once per combination (harmless, just wasted time) - give it its own config/run
+# with single-entry Optimizer/Loss/Scaler lists instead.
+Architecture:
+  - MLP
+  # - TabTransformer
+  # - TabPFN
+  # - TabICL
+  # - SapRpt1Oss
+
+# OptimizerName: pick any of: Adam, AdamW, SGD, RMSprop, RAdam, Lion, Prodigy,
+# ScheduleFreeAdamW, Sophia (used only by the from-scratch architectures - MLP/TabTransformer).
+# (Lion / Prodigy / ScheduleFreeAdamW need their optional packages installed -
+# pip install lion-pytorch prodigyopt schedulefree - otherwise they fall back to
+# AdamW automatically, with a printed warning.)
+OptimizerName:
+  - AdamW
+  # - Adam
+  # - SGD
+  # - RMSprop
+  # - RAdam
+  # - Lion
+  # - Prodigy
+  # - ScheduleFreeAdamW
+  # - Sophia
+
+# LossFunction: pick any of: CrossEntropy, Focal, LabelSmoothing
+LossFunction:
+  - CrossEntropy
+  # - Focal
+  # - LabelSmoothing
+
+# Scalers: pick any of: Standard, MinMax, Robust, MaxAbs, Normalizer, QuantileTransformer
+Scalers:
+  - Standard
+  # - MinMax
+  # - Robust
+  # - MaxAbs
+  # - Normalizer
+  # - QuantileTransformer
+
+# ImbalanceMethod: pick any of: SMOTE, ADASYN, BorderlineSMOTE, RandomOverSampler,
+# RandomUnderSampler, SMOTETomek, ClassWeight, None
+ImbalanceMethod:
+  - SMOTE
+  # - ADASYN
+  # - BorderlineSMOTE
+  # - RandomOverSampler
+  # - RandomUnderSampler
+  # - SMOTETomek
+  # - ClassWeight
+  # - None
+
+# OutlierMethod: pick any of: IQR, ZScore, IsolationForest, LocalOutlierFactor,
+# EllipticEnvelope, None
+OutlierMethod:
+  - IQR
+  # - ZScore
+  # - IsolationForest
+  # - LocalOutlierFactor
+  # - EllipticEnvelope
+  # - None
+
+# =============================================================================
+# EVERYTHING ELSE
+# =============================================================================
+OutputDir: ResultsDL
+
+# Compute device: "auto" picks CUDA if available, else CPU. Force it with "cpu" or "cuda".
+Device: auto
+
+# Mixed precision (faster + less memory on a CUDA GPU; on CPU it still runs, just
+# without the speed benefit) and exponential moving average of the weights (usually
+# a small accuracy boost, at the cost of a little extra memory).
+UseAmp: false
+UseEma: false
+
+# Learning-rate scheduler used during both Optuna trials and the final fit.
+# Pick any of: None, CosineWarmup, StepLR, ReduceLROnPlateau
+SchedulerName: CosineWarmup
+
+# Used only when LossFunction includes LabelSmoothing / Focal respectively.
+LabelSmoothing: 0.1
+FocalGamma: 2.0
+
+# Batch size for every DataLoader (train/val/test).
+BatchSize: 64
+
+# Final-fit training loop: max epochs and early-stopping patience (epochs with no
+# validation-loss improvement before stopping).
+NumEpochs: 100
+Patience: 15
+
+# Optuna hyperparameter search (Step 8): number of trials, and a much shorter
+# training budget per trial (full NumEpochs/Patience is used only for the final fit).
+NOptunaTrials: 15
+OptunaMaxEpochsPerTrial: 15
+OptunaPatience: 4
+
+# Optuna search-space bounds for the MLP architecture.
+MlpNumLayersMin: 1
+MlpNumLayersMax: 4
+MlpHiddenDimMin: 32
+MlpHiddenDimMax: 256
+MlpDropoutMin: 0.0
+MlpDropoutMax: 0.5
+
+# Optuna search-space bounds for the TabTransformer architecture.
+TransformerEmbedDimChoices: [16, 32, 64]
+TransformerNumHeadsChoices: [2, 4]
+TransformerNumLayersMin: 1
+TransformerNumLayersMax: 4
+TransformerDropoutMin: 0.0
+TransformerDropoutMax: 0.5
+
+# Optuna search-space bounds for the pretrained architectures (TabPFN, TabICL, SapRpt1Oss).
+# These models are never trained with gradient descent - "tuning" just picks the best of a
+# handful of cheap inference-time settings (ensembling/temperature/bagging) by Val macro-F1.
+# TabPFN / TabICL: number of ensemble members averaged at inference, and a softmax temperature
+# applied to their output probabilities (lower = sharper/more confident, higher = softer).
+PretrainedNEstimatorsMin: 2
+PretrainedNEstimatorsMax: 8
+PretrainedSoftmaxTempMin: 0.5
+PretrainedSoftmaxTempMax: 1.5
+
+# SapRpt1Oss: number of bagged forward passes averaged at inference, and the fixed max number
+# of context rows/tokens given to the model in one pass (not tuned - kept constant per run).
+SapRptBaggingMin: 1
+SapRptBaggingMax: 8
+SapRptMaxContextSize: 8192
+
+# Number of Optuna trials for the pretrained architectures specifically. Falls back to
+# NOptunaTrials above if not set - kept as a separate key since each trial here is just a
+# fit+predict (no epochs), so it's fine to leave this higher than the from-scratch budget.
+# PretrainedNOptunaTrials: 15
+
+# Pretrained foundation models only see a subsampled "context" of your training data at fit
+# time (in-context learning, not gradient training), capped by architecture:
+#   TabPFN default cap: 10000 rows | TabICL default cap: 100000 rows | SapRpt1Oss default cap: 8192 rows
+# All of our datasets are well under the TabICL cap, so TabICL always sees your full training
+# set. UfcMethod/UfcRound (~8.7k rows) are under the TabPFN cap too. The basketball datasets
+# (7-17k+ rows) get subsampled down to 10000 for TabPFN - override the cap per architecture by
+# adding a "{Architecture}MaxTrainRows" key, e.g.:
+# TabPFNMaxTrainRows: 10000
+# TabICLMaxTrainRows: 100000
+# SapRpt1OssMaxTrainRows: 8192
+
+# Train/val/test split fractions (must leave 1 - TestSize - ValSize for training).
+TestSize: 0.10
+ValSize: 0.10
+
+# Random seed used everywhere (split, resampling, model init, Optuna sampler).
+RandomState: 42
+
+# Step 2 (RemoveOutliers) parameters:
+OutlierIqrMultiplier: 3.0        # used by the IQR method
+OutlierZScoreThreshold: 3.0      # used by the ZScore method
+OutlierContamination: 0.05       # expected outlier fraction, used by IsolationForest/LocalOutlierFactor/EllipticEnvelope
+OutlierMaxRowDropFrac: 0.15      # safety cap: never remove more than this fraction of rows
+
+# Step 4 (DropRedundantColumns): absolute correlation above this is considered redundant.
+CorrelationThreshold: 0.95
+
+# Step 7 (SelectFeatures): each of the 3 methods (mutual information, ANOVA F-stat,
+# Random Forest importance) keeps its own top fraction of features; a feature
+# survives only if at least 2 of the 3 methods kept it.
+FeatureSelectionTopKFrac: 0.6
+MinFeaturesSelected: 4

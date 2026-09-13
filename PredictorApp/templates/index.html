@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matchup Predictor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%86%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Matchup Predictor</h1>
+  <p class="subtitle">Live predictions from your trained models</p>
+</header>
+
+<main class="app-main">
+
+  <section class="card" id="datasetCard">
+    <h2>1. Pick a matchup type</h2>
+    <div id="datasetTabs" class="dataset-tabs">
+      <p class="loading-text">Loading datasets…</p>
+    </div>
+    <p id="datasetTargetDescription" class="target-description"></p>
+    <p id="noModelWarning" class="warning hidden">
+      No trained model found for this dataset yet. Drop the folder for it into
+      <code>best_models/&lt;DatasetName&gt;/</code> and restart the app.
+    </p>
+  </section>
+
+  <section class="card" id="matchupCard">
+    <h2>2. Set up the matchup</h2>
+
+    <div class="matchup-grid">
+      <div class="entity-picker">
+        <label id="entity1Label" for="entity1Input">Fighter 1</label>
+        <input type="text" id="entity1Input" list="entity1List" autocomplete="off" placeholder="Start typing a name…">
+        <datalist id="entity1List"></datalist>
+        <p id="entity1Note" class="entity-note hidden"></p>
+      </div>
+
+      <div class="vs-divider">VS</div>
+
+      <div class="entity-picker">
+        <label id="entity2Label" for="entity2Input">Fighter 2</label>
+        <input type="text" id="entity2Input" list="entity2List" autocomplete="off" placeholder="Start typing a name…">
+        <datalist id="entity2List"></datalist>
+        <p id="entity2Note" class="entity-note hidden"></p>
+      </div>
+    </div>
+
+    <div id="ufcContext" class="context-fields hidden">
+      <div class="field">
+        <label for="weightClassSelect">Weight class</label>
+        <select id="weightClassSelect"></select>
+      </div>
+      <div class="field">
+        <label for="scheduledRoundsSelect">Scheduled rounds</label>
+        <select id="scheduledRoundsSelect"></select>
+      </div>
+      <div class="field checkbox-field">
+        <label><input type="checkbox" id="titleFightCheckbox"> Title fight</label>
+      </div>
+    </div>
+
+    <div id="basketballContext" class="context-fields hidden">
+      <div class="field">
+        <label for="seasonTypeSelect">Season type</label>
+        <select id="seasonTypeSelect"></select>
+      </div>
+      <div class="field checkbox-field">
+        <label><input type="checkbox" id="neutralSiteCheckbox"> Neutral site</label>
+      </div>
+      <div class="field checkbox-field">
+        <label><input type="checkbox" id="conferenceCompetitionCheckbox"> Conference game</label>
+      </div>
+    </div>
+
+    <button id="predictButton" type="button">Predict</button>
+    <p id="predictError" class="error hidden"></p>
+  </section>
+
+  <section class="card hidden" id="resultCard">
+    <h2>Prediction</h2>
+    <p id="debutCaveat" class="debut-caveat hidden"></p>
+    <div id="resultBlocks"></div>
+    <p id="unavailableNote" class="unavailable-note hidden"></p>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p>Running against models in <code>best_models/</code> — see the README for how to add more.</p>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
